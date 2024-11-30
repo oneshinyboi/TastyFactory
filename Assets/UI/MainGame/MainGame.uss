@@ -1,0 +1,10 @@
+.BuildableButton {
+    border-width: 0px;
+    background-color: rgba(0,0,0,0);
+    padding: 20px 20px 30px 20px;
+}
+
+.BuildableButtonIcon {
+    margin: 10px;
+    height: 100%;
+}

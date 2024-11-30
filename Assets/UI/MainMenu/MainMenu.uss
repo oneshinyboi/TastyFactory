@@ -1,0 +1,21 @@
+.panel {
+    align-items: center;
+    justify-content: center;
+    background-image: none;
+}
+
+.hidden {
+    display: none;
+}
+
+.sidePanel {
+}
+
+.menu {
+    align-items: center;
+    justify-content: flex-start;
+    align-self: auto;
+    max-height: 300px;
+    background-color: rgba(52, 32, 32, 0);
+    padding: 10px;
+}
