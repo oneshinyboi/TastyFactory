@@ -11,6 +11,7 @@ public class BuildingSystem : MonoBehaviour
 
     private Grid _grid;
     private bool _buildMode = false;
+    private bool _placementMode = false;
     
     [SerializeField] private Tilemap mainTilemap;
     [SerializeField] private TileBase whiteTile;
@@ -27,6 +28,8 @@ public class BuildingSystem : MonoBehaviour
     {
             Current = this;
             _grid = gridLayout.GameObject().GetComponent<Grid>();
+            _placementIndicator = InitializeObject(placementIndicatorPrefab, GetMouseWorldPosition()).GetComponent<PlacementIndicator>();
+            _placementIndicator.IsEnabled = false;
     }
     // Start is called before the first frame update
     void Start()
@@ -42,12 +45,28 @@ public class BuildingSystem : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.B))
         {
-            if (_placementIndicator == null)
-                _placementIndicator = InitializeObject(placementIndicatorPrefab, GetMouseWorldPosition()).GetComponent<PlacementIndicator>();
             _placementIndicator.IsEnabled = !_placementIndicator.IsEnabled;
         }
 
+        if (_placementMode && !_objectToPlace.isPlaced)
+        {
+            // Have it follow the mouse
+            Vector3 pos = GetMouseWorldPosition();
+            _objectToPlace.transform.position = BuildingSystem.Current.SnapCoordinateToGrid(pos);
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                _objectToPlace.transform.Rotate(0, 90, 0);
+                _placementIndicator.transform.Rotate(0, 90, 0);
+            }
+        }
+
+        if (_placementMode && _objectToPlace.isPlaced)
+        {
+            _placementMode = false;
+            _placementIndicator.IsEnabled = false;
+        }
     }
+    
     #endregion
     
     #region Utils
@@ -68,19 +87,24 @@ public class BuildingSystem : MonoBehaviour
     #endregion
     
     #region BuildingPlacement
-
-    private void ShowPlacementIndicator()
-    {
-        
-    }
+    
     public GameObject InitializeObject(GameObject prefab, Vector3 worldPosition)
     {
         Vector3 position = SnapCoordinateToGrid(worldPosition);
         GameObject obj = Instantiate(prefab, position, Quaternion.identity);
-        _objectToPlace = obj.GetComponent<PlaceableObject>();
-        obj.AddComponent<ObjectDrag>();
         return obj;
     }
+
+    public void ActivatePlacementMode(GameObject prefab, bool doPlacementArrow = false)
+    {
+        GameObject obj = InitializeObject(prefab, GetMouseWorldPosition());
+        _objectToPlace = obj.GetComponent<PlaceableObject>();
+        if (doPlacementArrow)
+            _placementIndicator.UsePlacementArrow(prefab.GetComponent<Collider>().bounds.size.y);
+        _placementIndicator.IsEnabled = true;
+        _placementMode = true;
+    }
+
     #endregion
-    
+
 }
