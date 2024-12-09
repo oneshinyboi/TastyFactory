@@ -55,7 +55,7 @@ public class PlacementIndicator : MonoBehaviour
     {
         if (!_isEnabled) return;
 
-        Vector3 pos = BuildingSystem.GetMouseWorldPosition() + _offset;
+        Vector3 pos = BuildingSystem.GetMouseBuildingPlanePosition() + _offset;
         transform.position = BuildingSystem.Current.SnapCoordinateToGrid(pos);
 
         if (_isLinearScaling)
@@ -109,6 +109,7 @@ public class PlacementIndicator : MonoBehaviour
     {
         gameObject.SetActive(false);
         _arrow.SetActive(false);
+        transform.rotation = Quaternion.identity;
         _isEnabled = false;
         _showDirectionArrow = false;
     }

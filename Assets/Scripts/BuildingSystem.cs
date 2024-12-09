@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -10,25 +12,24 @@ public class BuildingSystem : MonoBehaviour
     public GridLayout gridLayout;
 
     private Grid _grid;
-    private bool _buildMode = false;
+    private static LayerMask _buildableGround;
     private bool _placementMode = false;
     
-    [SerializeField] private Tilemap mainTilemap;
-    [SerializeField] private TileBase whiteTile;
-
     public GameObject placementIndicatorPrefab;
     public GameObject conveyerPrefab;
     
     private PlacementIndicator _placementIndicator;
-    private PlaceableObject _objectToPlace;
+    private PlaceableObject _placeableObjectToPlace;
+    private GameObject _objectToPlace;
 
     #region UnityMethods
 
     private void Awake()
     {
+            _buildableGround = LayerMask.GetMask("BuildableGround");
             Current = this;
             _grid = gridLayout.GameObject().GetComponent<Grid>();
-            _placementIndicator = InitializeObject(placementIndicatorPrefab, GetMouseWorldPosition()).GetComponent<PlacementIndicator>();
+            _placementIndicator = InitializeObject(placementIndicatorPrefab, GetMouseBuildingPlanePosition()).GetComponent<PlacementIndicator>();
             _placementIndicator.IsEnabled = false;
     }
     // Start is called before the first frame update
@@ -40,19 +41,11 @@ public class BuildingSystem : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.A))
-            InitializeObject(conveyerPrefab, GetMouseWorldPosition());
-
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            _placementIndicator.IsEnabled = !_placementIndicator.IsEnabled;
-        }
-
-        if (_placementMode && !_objectToPlace.isPlaced)
+        if (_placementMode)
         {
             // Have it follow the mouse
-            Vector3 pos = GetMouseWorldPosition();
-            _objectToPlace.transform.position = BuildingSystem.Current.SnapCoordinateToGrid(pos);
+            Vector3 pos = GetMouseBuildingPlanePosition();
+            _objectToPlace.transform.position = Current.SnapCoordinateToGrid(pos);
             if (Input.GetKeyDown(KeyCode.R))
             {
                 _objectToPlace.transform.Rotate(0, 90, 0);
@@ -60,20 +53,27 @@ public class BuildingSystem : MonoBehaviour
             }
         }
 
-        if (_placementMode && _objectToPlace.isPlaced)
+        if (_placementMode && _placeableObjectToPlace.isPlaced)
         {
             _placementMode = false;
             _placementIndicator.IsEnabled = false;
+        }
+
+        if (_placementMode && _placeableObjectToPlace.isCanceled)
+        {
+            _placementMode = false;
+            _placementIndicator.IsEnabled = false;
+            Destroy(_objectToPlace);
         }
     }
     
     #endregion
     
     #region Utils
-    public static Vector3 GetMouseWorldPosition()
+    public static Vector3 GetMouseBuildingPlanePosition()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(ray, out RaycastHit hit, Int32.MaxValue, _buildableGround))
             return hit.point;
         else return Vector3.zero;
     }
@@ -97,8 +97,9 @@ public class BuildingSystem : MonoBehaviour
 
     public void ActivatePlacementMode(GameObject prefab, bool doPlacementArrow = false)
     {
-        GameObject obj = InitializeObject(prefab, GetMouseWorldPosition());
-        _objectToPlace = obj.GetComponent<PlaceableObject>();
+        GameObject obj = InitializeObject(prefab, GetMouseBuildingPlanePosition());
+        _placeableObjectToPlace = obj.GetComponent<PlaceableObject>();
+        _objectToPlace = obj;
         if (doPlacementArrow)
             _placementIndicator.UsePlacementArrow(prefab.GetComponent<Collider>().bounds.size.y);
         _placementIndicator.IsEnabled = true;

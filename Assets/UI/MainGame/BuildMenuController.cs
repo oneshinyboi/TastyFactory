@@ -23,7 +23,6 @@ public class BuildMenuController : MonoBehaviour
 
     private void OnEnable()
     {
-        Debug.Log("gotHere");
         _conveyorButton = ui.Q<Button>("conveyorButton");
         _conveyorButton.RegisterCallback<ClickEvent>(evt => Buy(conveyorPrefab, true));
 
@@ -37,7 +36,6 @@ public class BuildMenuController : MonoBehaviour
     #region Private functions
     private void Buy(GameObject obj, bool doPlacementArrow = false)
     {
-        Debug.Log("Gotcha");
         PlaceableObject placeableObject = obj.GetComponent<PlaceableObject>();
         if (Player.Instance.CanBuy(placeableObject.price))
         {

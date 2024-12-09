@@ -8,13 +8,13 @@ public class ObjectDrag : MonoBehaviour
     public bool dragable = true;
     private void OnMouseDown()
     {
-        _offset = transform.position - BuildingSystem.GetMouseWorldPosition();
+        _offset = transform.position - BuildingSystem.GetMouseBuildingPlanePosition();
     }
 
     private void OnMouseDrag()
     {
         if (!dragable) return;
-        Vector3 pos = BuildingSystem.GetMouseWorldPosition() + _offset;
+        Vector3 pos = BuildingSystem.GetMouseBuildingPlanePosition() + _offset;
         transform.position = BuildingSystem.Current.SnapCoordinateToGrid(pos);
     }
     // Start is called before the first frame update
